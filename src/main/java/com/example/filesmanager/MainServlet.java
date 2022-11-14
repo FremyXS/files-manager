@@ -2,6 +2,8 @@ package com.example.filesmanager;
 
 import com.example.filesmanager.models.User;
 import com.example.filesmanager.models.UserRepository;
+import dbService.DBService;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -18,6 +20,8 @@ public class MainServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        DBService dbService = new DBService();
+        dbService.printConnectInfo();
         User user = UserRepository.USER_REPOSITORY.getUserByCookies(req.getCookies());
         if(user == null) {
             resp.sendRedirect("/files-manager/login");

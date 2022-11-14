@@ -2,6 +2,8 @@ package com.example.filesmanager;
 
 import com.example.filesmanager.models.User;
 import com.example.filesmanager.models.UserRepository;
+import dbService.DBException;
+import dbService.DBService;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -26,6 +28,7 @@ public class RegisterServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        DBService dbService = new DBService();
         String login = req.getParameter("login");
         String email = req.getParameter("email");
         String password = req.getParameter("password");
@@ -35,8 +38,12 @@ public class RegisterServlet extends HttpServlet {
         }
 
         User user = new User(login, password, email);
-        UserRepository.USER_REPOSITORY.addUser(user);
         UserRepository.USER_REPOSITORY.addUserBySession(MyCookie.getValue(req.getCookies(), "JSESSIONID"), user);
+        try {
+            dbService.addUser(login, password, email);
+        } catch (DBException e) {
+            throw new RuntimeException(e);
+        }
         resp.sendRedirect("/files-manager/");
     }
 }

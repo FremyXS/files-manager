@@ -2,6 +2,10 @@ package com.example.filesmanager;
 
 import com.example.filesmanager.models.User;
 import com.example.filesmanager.models.UserRepository;
+import dbService.DBException;
+import dbService.DBService;
+import dbService.dataSets.UserDataSet;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,6 +18,7 @@ import java.io.IOException;
 public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
         User user = UserRepository.USER_REPOSITORY.getUserByCookies(req.getCookies());
         if (user != null) {
             resp.sendRedirect(req.getContextPath() + "/");
@@ -25,6 +30,7 @@ public class LoginServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        DBService dbService = new DBService();
         String login = req.getParameter("login");
         String password = req.getParameter("password");
 
@@ -32,13 +38,19 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        User user = UserRepository.USER_REPOSITORY.getUserByLogin(login);
+//        User user = UserRepository.USER_REPOSITORY.getUserByLogin(login);
+        UserDataSet user = null;
+        try {
+            user = dbService.getUser(login);
+        } catch (DBException e) {
+            throw new RuntimeException(e);
+        }
         if (user == null || !user.getPassword().equals(password)) {
             resp.sendRedirect("/files-manager/login");
             return;
         }
-
-        UserRepository.USER_REPOSITORY.addUserBySession(MyCookie.getValue(req.getCookies(), "JSESSIONID"), user);
+        User user2 = new User(login, password, user.getEmail());
+        UserRepository.USER_REPOSITORY.addUserBySession(MyCookie.getValue(req.getCookies(), "JSESSIONID"), user2);
         resp.sendRedirect("/files-manager/");
     }
 }
